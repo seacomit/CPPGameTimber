@@ -4,6 +4,13 @@
 
 using namespace sf;
 
+struct Cloud
+{
+	Sprite sprite;
+	bool active;
+	float speed;
+};
+
 // This is where the game starts
 int main() 
 {
@@ -47,12 +54,10 @@ int main()
 	cloudSprite2.setPosition(0, 150);
 	cloudSprite3.setPosition(0, 300);
 
-	bool cloud1Active = false;
-	bool cloud2Active = false;
-	bool cloud3Active = false;
-	float cloud1Speed = 0.0f;
-	float cloud2Speed = 0.0f;
-	float cloud3Speed = 0.0f;
+	Cloud cloud1 = { cloudSprite1, false, 0.0f };
+	Cloud cloud2 = { cloudSprite2, false, 0.0f };
+	Cloud cloud3 = { cloudSprite3, false, 0.0f };
+	Cloud clouds[] = { cloud1, cloud2, cloud3 };
 
 	Clock clock;
 	int score = 0;
@@ -142,66 +147,30 @@ int main()
 				}
 			}
 
-			if (!cloud1Active)
-			{
-				srand((int)time(0) * 10);
-				cloud1Speed = (rand() % 200);
-				srand((int)time(0) * 10);
-				float height = (rand() % 150);
-				cloudSprite1.setPosition(-200, height);
-				cloud1Active = true;
-			}
-			else
-			{
-				cloudSprite1.setPosition(
-					cloudSprite1.getPosition().x + (cloud1Speed * dt.asSeconds()),
-					cloudSprite1.getPosition().y);
-				if (cloudSprite1.getPosition().x > 1920)
+			for (int i = 0; i < 3; i++) {
+				Cloud aCloud = clouds[i];
+				if (!aCloud.active)
 				{
-					cloud1Active = false;
+					srand((int)time(0) * (10 * (i + 1)));
+					aCloud.speed = (rand() % 200);
+					srand((int)time(0) * (10 * (i + 1)));
+					float height = (rand() % 150);
+					aCloud.sprite.setPosition(-200, height);
+					aCloud.active = true;
 				}
+				else
+				{
+					aCloud.sprite.setPosition(
+						aCloud.sprite.getPosition().x + (aCloud.speed * dt.asSeconds()),
+						aCloud.sprite.getPosition().y);
+					if (aCloud.sprite.getPosition().x > 1920)
+					{
+						aCloud.active = false;
+					}
+				}
+				clouds[i] = aCloud;
 			}
 
-			if (!cloud2Active)
-			{
-				srand((int)time(0) * 20);
-				cloud2Speed = (rand() % 200);
-				srand((int)time(0) * 20);
-				float height = (rand() % 150);
-				cloudSprite2.setPosition(-200, height);
-				cloud2Active = true;
-			}
-			else
-			{
-				cloudSprite2.setPosition(
-					cloudSprite2.getPosition().x + (cloud2Speed * dt.asSeconds()),
-					cloudSprite2.getPosition().y);
-				if (cloudSprite2.getPosition().x > 1920)
-				{
-					cloud2Active = false;
-				}
-			}
-
-			if (!cloud3Active)
-			{
-				srand((int)time(0) * 30);
-				cloud3Speed = (rand() % 200);
-				srand((int)time(0) * 30);
-				float height = (rand() % 150);
-				cloudSprite3.setPosition(-200, height);
-				cloud3Active = true;
-			}
-			else
-			{
-				cloudSprite3.setPosition(
-					cloudSprite3.getPosition().x + (cloud3Speed * dt.asSeconds()),
-					cloudSprite3.getPosition().y);
-				if (cloudSprite3.getPosition().x > 1920)
-				{
-					cloud3Active = false;
-				}
-			}
-			
 			std::stringstream ss;
 			ss << "Score = " << score;
 			scoreText.setString(ss.str());
@@ -210,12 +179,13 @@ int main()
 		// Draw
 		window.clear();
 		window.draw(backgroundSprite);
-		window.draw(cloudSprite1);
-		window.draw(cloudSprite2);
-		window.draw(cloudSprite3);
+		for (int i = 0; i < 3; i++) {
+			Cloud aCloud = clouds[i];
+			window.draw(aCloud.sprite);
+		}
 		window.draw(treeSprite);
 		window.draw(beeSprite);
-
+		
 		// Draw the HUD
 		window.draw(scoreText);
 		window.draw(timeBar);
