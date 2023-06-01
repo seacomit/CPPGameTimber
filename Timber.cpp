@@ -113,11 +113,51 @@ int main()
 	float timeBarWidthPerSecond = timeBarStartWidth / timeRemaining;
 	bool paused = true;
 
+	Texture texturePlayer;
+	texturePlayer.loadFromFile("graphics/player.png");
+	Sprite spritePlayer;
+	spritePlayer.setTexture(texturePlayer);
+	spritePlayer.setPosition(580, 720);
+	side playerSide = side::LEFT;
+
+	Texture textureRIP;
+	textureRIP.loadFromFile("graphics/rip.png");
+	Sprite spriteRIP;
+	spriteRIP.setTexture(textureRIP);
+	spriteRIP.setPosition(600, 860);
+
+	Texture textureAxe;
+	textureAxe.loadFromFile("graphics/axe.png");
+	Sprite spriteAxe;
+	spriteAxe.setTexture(textureAxe);
+	const float AXE_POSITION_LEFT = 700;
+	const float AXE_POSITION_RIGHT = 1075;
+	spriteAxe.setPosition(AXE_POSITION_LEFT, 830);
+
+	Texture textureLog;
+	textureLog.loadFromFile("graphics/log.png");
+	Sprite spriteLog;
+	spriteLog.setTexture(textureLog);
+	spriteLog.setPosition(810, 720);
+	bool logActive = false;
+	float logSpeedX = 1000;
+	float logSpeedY = -1500;
+	bool acceptInput = false;
+
 	while (window.isOpen())
 	{
 		/**
 		 * Handle some input
 		 */
+		Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased && !paused)
+			{
+				acceptInput = true;
+				spriteAxe.setPosition(2000, spriteAxe.getPosition().y);
+			}
+		}
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
 			window.close();
@@ -127,8 +167,49 @@ int main()
 			paused = false;
 			score = 0;
 			timeRemaining = 6.0f;
-		}
 
+			// Hide the branches initially.
+			for (int i = 1; i < NUM_BRANCHES; i++)
+			{
+				branchPositions[i] = side::NONE;
+			}
+			spriteRIP.setPosition(675, 2000);
+			spritePlayer.setPosition(580, 720);
+			acceptInput = true;
+		}
+		if (acceptInput)
+		{
+			if (Keyboard::isKeyPressed(Keyboard::Right))
+			{
+				playerSide = side::RIGHT;
+
+				score++;
+				timeRemaining += (2 / score) + 0.15;
+				spriteAxe.setPosition(AXE_POSITION_RIGHT, spriteAxe.getPosition().y);
+				spritePlayer.setPosition(1200, 720);
+				updateBranches(score);
+
+				spriteLog.setPosition(810, 720);
+				logSpeedX = -5000;
+				logActive = true;
+				acceptInput = false;
+			}
+			if (Keyboard::isKeyPressed(Keyboard::Left))
+			{
+				playerSide = side::LEFT;
+
+				score++;
+				timeRemaining += (2 / score) + 0.15;
+				spriteAxe.setPosition(AXE_POSITION_LEFT, spriteAxe.getPosition().y);
+				spritePlayer.setPosition(580, 720);
+				updateBranches(score);
+
+				spriteLog.setPosition(810, 720);
+				logSpeedX = 5000;
+				logActive = true;
+				acceptInput = false;
+			}
+		}
 
 		// Update
 		if (!paused)
@@ -201,17 +282,45 @@ int main()
 				if (branchPositions[i] == side::LEFT)
 				{
 					branches[i].setPosition(610, height);
+					branches[i].setOrigin(220, 40);
 					branches[i].setRotation(180);
 				}
 				else if (branchPositions[i] == side::RIGHT)
 				{
 					branches[i].setPosition(1330, height);
+					branches[i].setOrigin(220, 40);
 					branches[i].setRotation(0);
 				} 
 				else
 				{
 					branches[i].setPosition(3000, height);
 				}
+			}
+			// Send the log flying.
+			if (logActive)
+			{
+				spriteLog.setPosition(
+					spriteLog.getPosition().x + (logSpeedX * dt.asSeconds()),
+					spriteLog.getPosition().y + (logSpeedY * dt.asSeconds()));
+				if (spriteLog.getPosition().x < -100 || spriteLog.getPosition().x > 2000)
+				{
+					logActive = false;
+					spriteLog.setPosition(810, 720);
+				}
+			}
+			if (branchPositions[5] == playerSide)
+			{
+				paused = true;
+				acceptInput = false;
+
+				spriteRIP.setPosition(525, 760);
+				spritePlayer.setPosition(2000, 660);
+				messageText.setString("SQUISHED!!");
+				FloatRect textRect = messageText.getLocalBounds();
+				messageText.setOrigin(
+					textRect.left + textRect.width / 2.0f,
+					textRect.top + textRect.height / 2.0f);
+				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
 			}
 		}
 		
@@ -227,6 +336,10 @@ int main()
 			window.draw(branches[i]);
 		}
 		window.draw(treeSprite);
+		window.draw(spritePlayer);
+		window.draw(spriteAxe);
+		window.draw(spriteLog);
+		window.draw(spriteRIP);
 		window.draw(beeSprite);
 		
 		// Draw the HUD
@@ -248,18 +361,18 @@ void updateBranches(int seed)
 	for (int j = NUM_BRANCHES - 1; j > 0; j--)
 	{
 		branchPositions[j] = branchPositions[j - 1];
-		srand((int)time(0) + seed);
-		int r = (rand() % 5);
-		switch (r) {
-			case 0:
-				branchPositions[0] = side::LEFT;
-				break;
-			case 1:
-				branchPositions[0] = side::RIGHT;
-				break;
-			default:
-				branchPositions[0] = side::NONE;
-				break;
-		}
+	}
+	srand((int)time(0) + seed);
+	int r = (rand() % 5);
+	switch (r) {
+		case 0:
+			branchPositions[0] = side::LEFT;
+			break;
+		case 1:
+			branchPositions[0] = side::RIGHT;
+			break;
+		default:
+			branchPositions[0] = side::NONE;
+			break;
 	}
 }
