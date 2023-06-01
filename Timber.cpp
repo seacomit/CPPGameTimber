@@ -4,6 +4,13 @@
 
 using namespace sf;
 
+void updateBranches(int seed);
+const int NUM_BRANCHES = 6;
+Sprite branches[NUM_BRANCHES];
+
+enum class side { LEFT, RIGHT, NONE };
+side branchPositions[NUM_BRANCHES];
+
 struct Cloud
 {
 	Sprite sprite;
@@ -81,6 +88,19 @@ int main()
 		textRect.top + textRect.height / 2.0f);
 	messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
 	scoreText.setPosition(20, 20);
+
+	Texture textureBranch;
+	textureBranch.loadFromFile("graphics/branch.png");
+
+	for (int i = 0; i < NUM_BRANCHES; i++)
+	{
+		branches[i].setTexture(textureBranch);
+		branches[i].setPosition(-2000, -2000);
+		// The book has this as 220, 20, but the branch size is actually 440x80
+		// the point here is to center the origin of the sprite so I picked 40
+		branches[i].setOrigin(220, 40);
+	}
+
 	RectangleShape timeBar;
 	float timeBarStartWidth = 400;
 	float timeBarHeight = 80;
@@ -174,6 +194,25 @@ int main()
 			std::stringstream ss;
 			ss << "Score = " << score;
 			scoreText.setString(ss.str());
+
+			for (int i = 0; i < NUM_BRANCHES; i++)
+			{
+				float height = i * 150;
+				if (branchPositions[i] == side::LEFT)
+				{
+					branches[i].setPosition(610, height);
+					branches[i].setRotation(180);
+				}
+				else if (branchPositions[i] == side::RIGHT)
+				{
+					branches[i].setPosition(1330, height);
+					branches[i].setRotation(0);
+				} 
+				else
+				{
+					branches[i].setPosition(3000, height);
+				}
+			}
 		}
 		
 		// Draw
@@ -182,6 +221,10 @@ int main()
 		for (int i = 0; i < 3; i++) {
 			Cloud aCloud = clouds[i];
 			window.draw(aCloud.sprite);
+		}
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			window.draw(branches[i]);
 		}
 		window.draw(treeSprite);
 		window.draw(beeSprite);
@@ -198,4 +241,25 @@ int main()
 	}
 
 	return 0;
+}
+
+void updateBranches(int seed)
+{
+	for (int j = NUM_BRANCHES - 1; j > 0; j--)
+	{
+		branchPositions[j] = branchPositions[j - 1];
+		srand((int)time(0) + seed);
+		int r = (rand() % 5);
+		switch (r) {
+			case 0:
+				branchPositions[0] = side::LEFT;
+				break;
+			case 1:
+				branchPositions[0] = side::RIGHT;
+				break;
+			default:
+				branchPositions[0] = side::NONE;
+				break;
+		}
+	}
 }
