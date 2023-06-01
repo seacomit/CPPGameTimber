@@ -1,6 +1,7 @@
 // Includes
 #include <sstream>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 using namespace sf;
 
@@ -144,6 +145,21 @@ int main()
 	float logSpeedY = -1500;
 	bool acceptInput = false;
 
+	SoundBuffer chopBuffer;
+	chopBuffer.loadFromFile("sound/chop.wav");
+	Sound chop;
+	chop.setBuffer(chopBuffer);
+
+	SoundBuffer deathBuffer;
+	deathBuffer.loadFromFile("sound/death.wav");
+	Sound death;
+	death.setBuffer(deathBuffer);
+
+	SoundBuffer ootBuffer;
+	ootBuffer.loadFromFile("sound/out_of_time.wav");
+	Sound outOfTime;
+	outOfTime.setBuffer(ootBuffer);
+
 	while (window.isOpen())
 	{
 		/**
@@ -193,6 +209,7 @@ int main()
 				logSpeedX = -5000;
 				logActive = true;
 				acceptInput = false;
+				chop.play();
 			}
 			if (Keyboard::isKeyPressed(Keyboard::Left))
 			{
@@ -208,6 +225,7 @@ int main()
 				logSpeedX = 5000;
 				logActive = true;
 				acceptInput = false;
+				chop.play();
 			}
 		}
 
@@ -225,6 +243,7 @@ int main()
 					textRect.left + textRect.width / 2.0f, 
 					textRect.top + textRect.height / 2);
 				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+				outOfTime.play();
 			}
 			
 			if (!beeActive)
@@ -321,6 +340,7 @@ int main()
 					textRect.left + textRect.width / 2.0f,
 					textRect.top + textRect.height / 2.0f);
 				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+				death.play();
 			}
 		}
 		
